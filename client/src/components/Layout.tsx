@@ -29,7 +29,7 @@ export default function Layout({ children, title, actions }: LayoutProps) {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg">
+      <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform -translate-x-full transition-transform duration-200 ease-in-out lg:translate-x-0">
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center px-6 py-4 border-b border-gray-200">
@@ -85,14 +85,23 @@ export default function Layout({ children, title, actions }: LayoutProps) {
       </div>
 
       {/* Main Content */}
-      <div className="ml-64 flex-1 flex flex-col">
+      <div className="lg:ml-64 flex-1 flex flex-col">
         {/* Header */}
         <header className="bg-white shadow-sm border-b border-gray-200">
-          <div className="px-6 py-4">
+          <div className="px-4 sm:px-6 py-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-              <div className="flex items-center space-x-4">
-                {actions}
+              <div className="flex items-center">
+                <button className="lg:hidden mr-3 p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h2>
+              </div>
+              <div className="flex items-center space-x-2 sm:space-x-4">
+                <div className="hidden sm:block">
+                  {actions}
+                </div>
                 <div className="relative">
                   <Button variant="ghost" size="sm" className="relative p-2 text-gray-400 hover:text-gray-600">
                     <Bell className="h-5 w-5" />
@@ -103,11 +112,15 @@ export default function Layout({ children, title, actions }: LayoutProps) {
                 </div>
               </div>
             </div>
+            {/* Mobile actions */}
+            <div className="sm:hidden mt-3">
+              {actions}
+            </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
           {children}
         </main>
       </div>

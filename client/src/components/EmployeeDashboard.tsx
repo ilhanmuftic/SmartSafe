@@ -68,7 +68,7 @@ export default function EmployeeDashboard() {
                 <Badge className="bg-green-100 text-green-800">Active</Badge>
               </div>
               
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Start Date</p>
                   <p className="text-sm text-gray-900">
@@ -81,7 +81,7 @@ export default function EmployeeDashboard() {
                     {new Date(activeBooking.endDate).toLocaleDateString()}
                   </p>
                 </div>
-                <div>
+                <div className="sm:col-span-2 lg:col-span-1">
                   <p className="text-sm font-medium text-gray-600">Access Code</p>
                   <p className="text-2xl font-bold text-primary font-mono">
                     {activeBooking.accessCode}
@@ -144,7 +144,7 @@ export default function EmployeeDashboard() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {availableVehicles.map((vehicle: Vehicle) => (
             <Card key={vehicle.id} className="overflow-hidden">
               <div className="aspect-video">
