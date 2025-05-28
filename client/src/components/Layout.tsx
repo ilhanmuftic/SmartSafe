@@ -1,6 +1,6 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Car, Bell, LogOut } from "lucide-react";
+import { Car, Bell, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
 interface LayoutProps {
@@ -11,6 +11,7 @@ interface LayoutProps {
 
 export default function Layout({ children, title, actions }: LayoutProps) {
   const { user, logout } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navigationItems = user?.role === "admin" 
     ? [
@@ -28,11 +29,21 @@ export default function Layout({ children, title, actions }: LayoutProps) {
 
   return (
     <div className="flex h-screen bg-gray-50">
+      {/* Mobile sidebar backdrop */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform -translate-x-full transition-transform duration-200 ease-in-out lg:translate-x-0">
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
             <div className="flex items-center">
               <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
                 <Car className="h-4 w-4 text-white" />
@@ -41,6 +52,12 @@ export default function Layout({ children, title, actions }: LayoutProps) {
                 <h1 className="text-lg font-semibold text-gray-900">Smart&Safe</h1>
               </div>
             </div>
+            <button
+              className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
           
           {/* Navigation */}
@@ -91,10 +108,11 @@ export default function Layout({ children, title, actions }: LayoutProps) {
           <div className="px-4 sm:px-6 py-4">
             <div className="flex justify-between items-center">
               <div className="flex items-center">
-                <button className="lg:hidden mr-3 p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100">
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
+                <button 
+                  className="lg:hidden mr-3 p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                  onClick={() => setSidebarOpen(true)}
+                >
+                  <Menu className="h-6 w-6" />
                 </button>
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h2>
               </div>

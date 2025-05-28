@@ -199,29 +199,30 @@ export default function EmployeeDashboard() {
       {/* Recent Requests */}
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Requests</h3>
-        <Card>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Vehicle
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Period
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Purpose
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Access Code
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+        <div className="hidden md:block">
+          <Card>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Vehicle
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Period
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Purpose
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Access Code
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
                 {userRequests.map((request: VehicleRequestWithDetails) => (
                   <tr key={request.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -273,10 +274,58 @@ export default function EmployeeDashboard() {
                     </td>
                   </tr>
                 )}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
+        
+        {/* Mobile view */}
+        <div className="md:hidden space-y-4">
+          {userRequests.map((request: VehicleRequestWithDetails) => (
+            <Card key={request.id}>
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h4 className="font-medium text-gray-900">{request.vehicle.model}</h4>
+                    <p className="text-sm text-gray-600">{request.vehicle.plateNumber}</p>
+                  </div>
+                  <Badge
+                    className={
+                      request.status === "approved"
+                        ? "bg-green-100 text-green-800"
+                        : request.status === "rejected"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }
+                  >
+                    {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                  </Badge>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600">
+                    <strong>Period:</strong> {new Date(request.startDate).toLocaleDateString()} - {new Date(request.endDate).toLocaleDateString()}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    <strong>Purpose:</strong> {request.purpose}
+                  </p>
+                  {request.accessCode && (
+                    <p className="text-sm text-gray-600">
+                      <strong>Access Code:</strong> <span className="font-mono font-bold text-primary">{request.accessCode}</span>
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          {userRequests.length === 0 && (
+            <Card>
+              <CardContent className="p-6 text-center text-gray-500">
+                No requests found
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
 
       <VehicleRequestModal
