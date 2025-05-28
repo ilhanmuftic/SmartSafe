@@ -57,7 +57,7 @@ export default function VehicleRequestModal({
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      employeeId: user?.id || 0,
+      employeeId: user?.id || 2,
       vehicleId: preSelectedVehicleId,
     },
   });
@@ -92,6 +92,8 @@ export default function VehicleRequestModal({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/requests", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/requests", "pending"] });
       toast({
         title: "Success",
         description: "Vehicle request submitted successfully! You will be notified once approved.",
@@ -109,7 +111,11 @@ export default function VehicleRequestModal({
   });
 
   const onSubmit = (data: FormData) => {
-    createRequestMutation.mutate(data);
+    const requestData = {
+      ...data,
+      employeeId: user?.id || 2,
+    };
+    createRequestMutation.mutate(requestData);
   };
 
   const handleClose = () => {

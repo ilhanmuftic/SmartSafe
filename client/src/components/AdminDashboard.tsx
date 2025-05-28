@@ -162,8 +162,8 @@ export default function AdminDashboard() {
                   <div key={request.id} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h4 className="font-medium text-gray-900">{request.employee.name}</h4>
-                        <p className="text-sm text-gray-600">{request.employee.department}</p>
+                        <h4 className="font-medium text-gray-900">{request.employee?.name || "Unknown Employee"}</h4>
+                        <p className="text-sm text-gray-600">{request.employee?.department || "Unknown Department"}</p>
                       </div>
                       <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                         Pending
@@ -236,10 +236,10 @@ export default function AdminDashboard() {
                     </div>
                     <div className="flex-1">
                       <p className="text-sm text-gray-900">
-                        <span className="font-medium">{activity.employee.name}</span> request {activity.status}
+                        <span className="font-medium">{activity.employee?.name || "Unknown Employee"}</span> request {activity.status}
                       </p>
                       <p className="text-sm text-gray-600">
-                        {activity.vehicle.model} - {activity.vehicle.plateNumber}
+                        {activity.vehicle?.model || "Unknown Vehicle"} - {activity.vehicle?.plateNumber || "N/A"}
                       </p>
                       <p className="text-xs text-gray-500">
                         {activity.approvedAt 
