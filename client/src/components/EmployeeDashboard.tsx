@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth";
 
 export default function EmployeeDashboard() {
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<number | undefined>();
   const { user } = useAuth();
 
   const { data: userRequests = [] } = useQuery({
@@ -28,13 +29,16 @@ export default function EmployeeDashboard() {
     new Date(req.endDate) >= new Date()
   );
 
-  const availableVehicles = vehicles.filter((vehicle: Vehicle) => vehicle.status === "available");
+  const availableVehicles = (vehicles as Vehicle[]).filter((vehicle: Vehicle) => vehicle.status === "available");
 
   return (
     <Layout 
       title="My Dashboard"
       actions={
-        <Button onClick={() => setIsRequestModalOpen(true)}>
+        <Button onClick={() => {
+          setSelectedVehicleId(undefined);
+          setIsRequestModalOpen(true);
+        }}>
           <Plus className="h-4 w-4 mr-2" />
           Request Vehicle
         </Button>
@@ -110,7 +114,10 @@ export default function EmployeeDashboard() {
               <p className="text-gray-500">No active bookings</p>
               <Button 
                 className="mt-4" 
-                onClick={() => setIsRequestModalOpen(true)}
+                onClick={() => {
+                  setSelectedVehicleId(undefined);
+                  setIsRequestModalOpen(true);
+                }}
               >
                 Request a Vehicle
               </Button>
@@ -176,7 +183,10 @@ export default function EmployeeDashboard() {
                 
                 <Button 
                   className="w-full" 
-                  onClick={() => setIsRequestModalOpen(true)}
+                  onClick={() => {
+                    setSelectedVehicleId(vehicle.id);
+                    setIsRequestModalOpen(true);
+                  }}
                 >
                   Request This Vehicle
                 </Button>
@@ -271,7 +281,11 @@ export default function EmployeeDashboard() {
 
       <VehicleRequestModal
         isOpen={isRequestModalOpen}
-        onClose={() => setIsRequestModalOpen(false)}
+        onClose={() => {
+          setIsRequestModalOpen(false);
+          setSelectedVehicleId(undefined);
+        }}
+        preSelectedVehicleId={selectedVehicleId}
       />
     </Layout>
   );

@@ -137,6 +137,8 @@ export class MemStorage implements IStorage {
     const user: User = {
       ...insertUser,
       id: this.currentId.users++,
+      role: insertUser.role || "employee",
+      department: insertUser.department || null,
       createdAt: new Date(),
     };
     this.users.set(user.id, user);
@@ -172,6 +174,9 @@ export class MemStorage implements IStorage {
     const vehicle: Vehicle = {
       ...insertVehicle,
       id: this.currentId.vehicles++,
+      status: insertVehicle.status || "available",
+      lastMaintenance: insertVehicle.lastMaintenance || null,
+      imageUrl: insertVehicle.imageUrl || null,
       createdAt: new Date(),
     };
     this.vehicles.set(vehicle.id, vehicle);
