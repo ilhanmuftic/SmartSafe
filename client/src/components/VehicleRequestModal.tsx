@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
@@ -29,6 +29,7 @@ import { z } from "zod";
 interface VehicleRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
+  preSelectedVehicleId?: number;
 }
 
 const formSchema = insertVehicleRequestSchema.extend({
@@ -40,6 +41,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function VehicleRequestModal({
   isOpen,
   onClose,
+  preSelectedVehicleId,
 }: VehicleRequestModalProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -56,8 +58,16 @@ export default function VehicleRequestModal({
     resolver: zodResolver(formSchema),
     defaultValues: {
       employeeId: user?.id || 0,
+      vehicleId: preSelectedVehicleId,
     },
   });
+
+  // Set pre-selected vehicle when modal opens
+  useEffect(() => {
+    if (preSelectedVehicleId && isOpen) {
+      setValue("vehicleId", preSelectedVehicleId);
+    }
+  }, [preSelectedVehicleId, isOpen, setValue]);
 
   const startDate = watch("startDate");
   const endDate = watch("endDate");
@@ -118,6 +128,7 @@ export default function VehicleRequestModal({
           <div>
             <Label htmlFor="vehicle-select">Select Vehicle</Label>
             <Select
+              value={watch("vehicleId")?.toString() || ""}
               onValueChange={(value) => setValue("vehicleId", parseInt(value))}
             >
               <SelectTrigger className="mt-1">

@@ -35,12 +35,18 @@ export function useAuth() {
     const { user } = await response.json();
     setUser(user);
     localStorage.setItem("user", JSON.stringify(user));
+    
+    // Navigate to dashboard after successful login
+    window.location.href = "/";
+    
     return user;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    // Navigate to login after logout
+    window.location.href = "/login";
   };
 
   return {
