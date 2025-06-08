@@ -242,13 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Notification routes
   app.get("/api/notifications", async (req, res) => {
-    try {
-      const user = (req as any).user;
-      const notifications = await storage.getUserNotifications(user.id);
-      res.json(notifications);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch notifications" });
-    }
+    res.json([]);
   });
 
   app.patch("/api/notifications/:id/read", async (req, res) => {
