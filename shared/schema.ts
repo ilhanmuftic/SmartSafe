@@ -43,6 +43,26 @@ export const vehicleRequests = pgTable("vehicle_requests", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const vehicleAccess = pgTable("vehicle_access", {
+  id: serial("id").primaryKey(),
+  requestId: integer("request_id").references(() => vehicleRequests.id).notNull(),
+  accessTime: timestamp("access_time").defaultNow().notNull(),
+  accessCode: text("access_code").notNull(),
+  successful: boolean("successful").notNull().default(true),
+  location: text("location"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  type: text("type").notNull().default("info"),
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -78,3 +98,19 @@ export type VehicleRequestWithDetails = VehicleRequest & {
   vehicle: Vehicle;
   approver?: User;
 };
+
+export const insertVehicleAccessSchema = createInsertSchema(vehicleAccess).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertVehicleAccess = z.infer<typeof insertVehicleAccessSchema>;
+export type VehicleAccess = typeof vehicleAccess.$inferSelect;
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;

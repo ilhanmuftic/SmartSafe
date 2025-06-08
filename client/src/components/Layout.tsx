@@ -2,6 +2,7 @@ import { ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Car, Bell, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { Link, useLocation } from "wouter";
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,19 +13,21 @@ interface LayoutProps {
 export default function Layout({ children, title, actions }: LayoutProps) {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [location] = useLocation();
 
   const navigationItems = user?.role === "admin" 
     ? [
-        { icon: "fas fa-tachometer-alt", label: "Dashboard", active: true },
-        { icon: "fas fa-car", label: "Vehicles", active: false },
-        { icon: "fas fa-clipboard-list", label: "Requests", active: false },
-        { icon: "fas fa-history", label: "History", active: false },
+        { icon: "fas fa-tachometer-alt", label: "Dashboard", href: "/", active: location === "/" },
+        { icon: "fas fa-car", label: "Vehicles", href: "/vehicles", active: location === "/vehicles" },
+        { icon: "fas fa-clipboard-list", label: "Requests", href: "/requests", active: location === "/requests" },
+        { icon: "fas fa-chart-bar", label: "Reports", href: "/reports", active: location === "/reports" },
+        { icon: "fas fa-history", label: "Access Logs", href: "/logs", active: location === "/logs" },
       ]
     : [
-        { icon: "fas fa-tachometer-alt", label: "Dashboard", active: true },
-        { icon: "fas fa-plus-circle", label: "Request Vehicle", active: false },
-        { icon: "fas fa-clipboard-list", label: "My Bookings", active: false },
-        { icon: "fas fa-history", label: "History", active: false },
+        { icon: "fas fa-tachometer-alt", label: "Dashboard", href: "/", active: location === "/" },
+        { icon: "fas fa-plus-circle", label: "Request Vehicle", href: "/request", active: location === "/request" },
+        { icon: "fas fa-clipboard-list", label: "My Bookings", href: "/bookings", active: location === "/bookings" },
+        { icon: "fas fa-history", label: "History", href: "/history", active: location === "/history" },
       ];
 
   return (
@@ -63,9 +66,10 @@ export default function Layout({ children, title, actions }: LayoutProps) {
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2">
             {navigationItems.map((item, index) => (
-              <a
+              <Link
                 key={index}
-                href="#"
+                href={item.href}
+                onClick={() => setSidebarOpen(false)}
                 className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg ${
                   item.active
                     ? "text-white bg-primary"
@@ -74,7 +78,7 @@ export default function Layout({ children, title, actions }: LayoutProps) {
               >
                 <i className={`${item.icon} mr-3`}></i>
                 {item.label}
-              </a>
+              </Link>
             ))}
           </nav>
 
