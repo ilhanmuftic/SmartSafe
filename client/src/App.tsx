@@ -6,6 +6,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "./lib/auth";
 import LoginForm from "./components/LoginForm";
 import Dashboard from "./pages/Dashboard";
+import VehiclesPage from "./pages/VehiclesPage";
+import RequestVehiclePage from "./pages/RequestVehiclePage";
+import BookingsPage from "./pages/BookingsPage";
+import HistoryPage from "./pages/HistoryPage";
+import RequestsPage from "./pages/RequestsPage";
+import ReportsPage from "./pages/ReportsPage";
+import AccessLogsPage from "./pages/AccessLogsPage";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -42,9 +49,44 @@ function Router() {
       <Route path="/login">
         {isAuthenticated ? <Redirect to="/" /> : <LoginForm />}
       </Route>
-      <Route path="/">
+      <Route path="/" exact>
         <ProtectedRoute>
           <Dashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/vehicles">
+        <ProtectedRoute>
+          <VehiclesPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/request">
+        <ProtectedRoute>
+          <RequestVehiclePage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/bookings">
+        <ProtectedRoute>
+          <BookingsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/history">
+        <ProtectedRoute>
+          <HistoryPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/requests">
+        <ProtectedRoute>
+          <RequestsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/reports">
+        <ProtectedRoute>
+          <ReportsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/logs">
+        <ProtectedRoute>
+          <AccessLogsPage />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />

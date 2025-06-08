@@ -23,6 +23,8 @@ export interface IStorage {
   getAvailableVehicles(startDate: Date, endDate: Date): Promise<Vehicle[]>;
   getVehicle(id: number): Promise<Vehicle | undefined>;
   createVehicle(vehicle: InsertVehicle): Promise<Vehicle>;
+  updateVehicle(id: number, updates: Partial<InsertVehicle>): Promise<Vehicle>;
+  deleteVehicle(id: number): Promise<void>;
   updateVehicleStatus(id: number, status: string): Promise<void>;
   
   // Request operations
@@ -31,7 +33,17 @@ export interface IStorage {
   getUserRequests(userId: number): Promise<VehicleRequestWithDetails[]>;
   getRequest(id: number): Promise<VehicleRequestWithDetails | undefined>;
   createRequest(request: InsertVehicleRequest): Promise<VehicleRequest>;
-  updateRequestStatus(id: number, status: string, approvedBy?: number, accessCode?: string): Promise<VehicleRequest>;
+  updateRequestStatus(id: number, status: string, approvedBy?: number, accessCode?: string, rejectionReason?: string): Promise<VehicleRequest>;
+  
+  // Notification operations
+  getUserNotifications(userId: number): Promise<Notification[]>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationRead(id: number): Promise<void>;
+  markAllNotificationsRead(userId: number): Promise<void>;
+  
+  // Access log operations
+  getAccessLogs(): Promise<VehicleAccess[]>;
+  createAccessLog(log: InsertVehicleAccess): Promise<VehicleAccess>;
   
   // Dashboard stats
   getVehicleStats(): Promise<{
