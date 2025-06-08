@@ -311,6 +311,8 @@ export class MemStorage implements IStorage {
     const notification: Notification = {
       id: this.currentId.notifications++,
       ...insertNotification,
+      type: insertNotification.type || "info",
+      read: insertNotification.read || false,
       createdAt: new Date(),
     };
     this.notifications.set(notification.id, notification);
@@ -341,7 +343,11 @@ export class MemStorage implements IStorage {
   async createAccessLog(insertLog: InsertVehicleAccess): Promise<VehicleAccess> {
     const log: VehicleAccess = {
       id: this.currentId.accessLogs++,
-      ...insertLog,
+      requestId: insertLog.requestId,
+      accessTime: insertLog.accessTime || new Date(),
+      accessCode: insertLog.accessCode,
+      successful: insertLog.successful || true,
+      location: insertLog.location || null,
       createdAt: new Date(),
     };
     this.accessLogs.set(log.id, log);

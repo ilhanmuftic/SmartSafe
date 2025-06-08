@@ -1,8 +1,9 @@
 import { ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Car, Bell, LogOut, Menu, X } from "lucide-react";
+import { Car, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
+import NotificationCenter from "@/components/NotificationCenter";
 
 interface LayoutProps {
   children: ReactNode;

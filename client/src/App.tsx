@@ -49,7 +49,7 @@ function Router() {
       <Route path="/login">
         {isAuthenticated ? <Redirect to="/" /> : <LoginForm />}
       </Route>
-      <Route path="/" exact>
+      <Route path="/">
         <ProtectedRoute>
           <Dashboard />
         </ProtectedRoute>
