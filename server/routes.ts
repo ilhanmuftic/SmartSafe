@@ -192,6 +192,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Vehicle management routes
+  app.post("/api/vehicles", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const vehicle = await storage.createVehicle(req.body);
+      res.json(vehicle);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to create vehicle" });
+    }
+  });
+
+  app.patch("/api/vehicles/:id", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const id = parseInt(req.params.id);
+      const vehicle = await storage.updateVehicle(id, req.body);
+      res.json(vehicle);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to update vehicle" });
+    }
+  });
+
+  app.delete("/api/vehicles/:id", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const id = parseInt(req.params.id);
+      await storage.deleteVehicle(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to delete vehicle" });
+    }
+  });
+
+  // Notification routes
+  app.get("/api/notifications", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      if (!user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const notifications = await storage.getUserNotifications(user.id);
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.patch("/api/notifications/:id/read", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      if (!user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const id = parseInt(req.params.id);
+      await storage.markNotificationRead(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  app.patch("/api/notifications/read-all", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      if (!user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      await storage.markAllNotificationsRead(user.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
+    }
+  });
+
+  // Access logs routes
+  app.get("/api/access-logs", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const logs = await storage.getAccessLogs();
+      res.json(logs);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch access logs" });
+    }
+  });
+
+  app.post("/api/access-logs", async (req, res) => {
+    try {
+      const log = await storage.createAccessLog(req.body);
+      res.json(log);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to create access log" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

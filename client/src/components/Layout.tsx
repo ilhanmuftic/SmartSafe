@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Car, LogOut, Menu, X } from "lucide-react";
+import { Car, Bell, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
 import NotificationCenter from "@/components/NotificationCenter";
@@ -125,14 +125,7 @@ export default function Layout({ children, title, actions }: LayoutProps) {
                 <div className="hidden sm:block">
                   {actions}
                 </div>
-                <div className="relative">
-                  <Button variant="ghost" size="sm" className="relative p-2 text-gray-400 hover:text-gray-600">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center">
-                      <span className="text-xs text-white font-medium">3</span>
-                    </span>
-                  </Button>
-                </div>
+                <NotificationCenter />
               </div>
             </div>
             {/* Mobile actions */}

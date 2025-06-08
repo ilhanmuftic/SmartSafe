@@ -133,7 +133,7 @@ export default function NotificationCenter() {
                         )}
                       </div>
                       <p className="text-sm text-gray-600 mb-2">{notification.message}</p>
-                      <p className="text-xs text-gray-400">{formatTime(notification.createdAt)}</p>
+                      <p className="text-xs text-gray-400">{formatTime(notification.createdAt.toString())}</p>
                     </div>
                   </div>
                 </div>
