@@ -15,7 +15,7 @@ const approveRequestSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Authentication routes
+  // Authentication routes (without middleware)
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { email, password } = loginSchema.parse(req.body);
@@ -244,10 +244,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/notifications", async (req, res) => {
     try {
       const user = (req as any).user;
-      if (!user) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-
       const notifications = await storage.getUserNotifications(user.id);
       res.json(notifications);
     } catch (error) {

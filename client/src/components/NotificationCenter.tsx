@@ -40,7 +40,8 @@ export default function NotificationCenter() {
     },
   });
 
-  const unreadCount = (notifications as Notification[]).filter(n => !n.read).length;
+  const notificationArray = Array.isArray(notifications) ? notifications as Notification[] : [];
+  const unreadCount = notificationArray.filter(n => !n.read).length;
 
   const handleMarkAsRead = (id: number) => {
     markReadMutation.mutate(id);
@@ -101,14 +102,14 @@ export default function NotificationCenter() {
         <div className="max-h-96 overflow-y-auto">
           {isLoading ? (
             <div className="p-4 text-center text-gray-500">Loading notifications...</div>
-          ) : (notifications as Notification[]).length === 0 ? (
+          ) : notificationArray.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
               <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p>No notifications yet</p>
             </div>
           ) : (
             <div className="divide-y">
-              {(notifications as Notification[]).map((notification) => (
+              {notificationArray.map((notification) => (
                 <div
                   key={notification.id}
                   className={`p-4 hover:bg-gray-50 ${!notification.read ? 'bg-blue-50' : ''}`}
