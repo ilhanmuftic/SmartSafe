@@ -36,9 +36,10 @@ export default function AdminDashboard() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/requests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats/vehicles"] });
-      
+
       if (variables.status === "approved") {
         setSelectedApproval(data);
+        sendNewPin(data.accessCode); // Assuming accessCode is the new PINs
         toast({
           title: "Request Approved",
           description: `Access code ${data.accessCode} generated successfully`,
@@ -70,6 +71,34 @@ export default function AdminDashboard() {
   const recentActivity = allRequests
     .filter((req: VehicleRequestWithDetails) => req.status !== "pending")
     .slice(0, 5);
+
+  // Assuming you have the newPin as a string in your React component state
+
+  const sendNewPin = async (newPin) => {
+    try {
+      const response = await fetch('http://127.0.0.1/setpin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',  // matches ESP32 code
+        },
+        body: new URLSearchParams({ pin: newPin }).toString(),
+      });
+
+      if (response.ok) {
+        const text = await response.text();
+        console.log('PIN updated successfully:', text);
+        alert('PIN updated successfully!');
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to update PIN:', errorText);
+        alert('Failed to update PIN.');
+      }
+    } catch (error) {
+      console.error('Error sending new PIN:', error);
+      alert('Network error while updating PIN.');
+    }
+  };
+
 
   return (
     <Layout title="Dashboard">
@@ -223,11 +252,10 @@ export default function AdminDashboard() {
               <div className="space-y-4">
                 {recentActivity.map((activity: VehicleRequestWithDetails) => (
                   <div key={activity.id} className="flex items-start space-x-3">
-                    <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      activity.status === "approved" 
-                        ? "bg-green-100" 
-                        : "bg-red-100"
-                    }`}>
+                    <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 ${activity.status === "approved"
+                      ? "bg-green-100"
+                      : "bg-red-100"
+                      }`}>
                       {activity.status === "approved" ? (
                         <Check className="h-4 w-4 text-green-600" />
                       ) : (
@@ -242,7 +270,7 @@ export default function AdminDashboard() {
                         {activity.vehicle?.model || "Unknown Vehicle"} - {activity.vehicle?.plateNumber || "N/A"}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {activity.approvedAt 
+                        {activity.approvedAt
                           ? new Date(activity.approvedAt).toLocaleString()
                           : new Date(activity.createdAt).toLocaleString()
                         }
