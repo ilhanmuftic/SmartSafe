@@ -145,6 +145,60 @@ export class MemStorage implements IStorage {
     ];
 
     vehicles.forEach(vehicle => this.vehicles.set(vehicle.id, vehicle));
+
+    // Add sample ESP device access logs for demonstration
+    const sampleAccessLogs = [
+      {
+        id: this.currentId.accessLogs++,
+        requestId: 1,
+        employeeId: 2, // John Smith
+        vehicleId: 1, // Toyota Camry
+        accessTime: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+        accessCode: "7834",
+        action: "SAFE_OPENED",
+        successful: true,
+        location: "Vehicle Safe",
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      },
+      {
+        id: this.currentId.accessLogs++,
+        requestId: 2,
+        employeeId: 2, // John Smith
+        vehicleId: 2, // Honda CR-V
+        accessTime: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+        accessCode: "2947",
+        action: "SAFE_OPENED",
+        successful: true,
+        location: "Vehicle Safe",
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      },
+      {
+        id: this.currentId.accessLogs++,
+        requestId: 3,
+        employeeId: 1, // Admin
+        vehicleId: 3, // Ford Focus
+        accessTime: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+        accessCode: "5612",
+        action: "SAFE_OPENED",
+        successful: true,
+        location: "Vehicle Safe",
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      },
+      {
+        id: this.currentId.accessLogs++,
+        requestId: 4,
+        employeeId: 2, // John Smith
+        vehicleId: 1, // Toyota Camry
+        accessTime: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+        accessCode: "9183",
+        action: "SAFE_OPENED",
+        successful: true,
+        location: "Vehicle Safe",
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      },
+    ];
+
+    sampleAccessLogs.forEach(log => this.accessLogs.set(log.id, log));
   }
 
   async getUser(id: number): Promise<User | undefined> {
