@@ -15,6 +15,27 @@ const approveRequestSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Simple authentication middleware - apply to all routes except login
+  app.use('/api', (req, res, next) => {
+    // Skip auth for login route
+    if (req.path === '/auth/login') {
+      return next();
+    }
+    
+    // For demo purposes, check Authorization header or default to admin
+    // In production, this would check session/JWT tokens
+    const authHeader = req.headers.authorization;
+    if (authHeader === 'admin') {
+      (req as any).user = { id: 1, email: "admin@company.com", role: "admin" };
+    } else if (authHeader === 'employee') {
+      (req as any).user = { id: 2, email: "employee@company.com", role: "employee" };
+    } else {
+      // Default to admin for testing vehicle management
+      (req as any).user = { id: 1, email: "admin@company.com", role: "admin" };
+    }
+    next();
+  });
+
   // Authentication routes (without middleware)
   app.post("/api/auth/login", async (req, res) => {
     try {
