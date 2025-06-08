@@ -118,30 +118,66 @@ Physical Layer
 4. **ESP Verification**: ESP device validates code and unlocks safe
 5. **Security Logging**: Access event recorded with timestamp and employee ID
 6. **Code Expiration**: PIN becomes invalid after single use
+# ESP32 Keypad-Controlled Lock with OLED Display and Web PIN Management
 
-### ESP API Endpoints
+This project implements a secure keypad-based lock system using an ESP32, OLED display, servo motor, and a web interface to remotely manage the PIN code.
 
-**Record Access Event** (for ESP device)
-```bash
-POST /api/access-logs
-Content-Type: application/json
+## Features
 
-{
-  "requestId": 123,
-  "employeeId": 456,
-  "vehicleId": 789,
-  "accessCode": "7834",
-  "action": "SAFE_OPENED",
-  "successful": true,
-  "location": "Vehicle Safe"
-}
-```
+- 4x4 Matrix Keypad for PIN entry
+- OLED Display (SSD1306) shows prompts and status messages
+- Servo Motor controls a lock mechanism (locked/unlocked positions)
+- EEPROM Emulation on ESP32 flash to securely store a 4-digit PIN
+- WiFi-enabled Web Server allows remote PIN change via a simple web form
+- PIN Validation on keypad entry with feedback on OLED and serial monitor
+- Default PIN is set to `1234` if none is stored
 
-**Get Access Logs** (admin only)
-```bash
-GET /api/access-logs
-Authorization: Bearer <admin_token>
-```
+## Hardware Requirements
+
+- ESP32 development board
+- 4x4 Matrix Keypad
+- OLED Display (SSD1306, I2C)
+- Servo motor (e.g., SG90) connected to GPIO 15
+- Power supply and wiring as needed
+
+## Wiring Summary
+
+| Component       | ESP32 Pin         |
+| --------------- | ----------------- |
+| Keypad Rows     | 32, 33, 25, 26    |
+| Keypad Columns  | 27, 14, 12, 13    |
+| OLED SDA        | GPIO 21 (I2C SDA) |
+| OLED SCL        | GPIO 22 (I2C SCL) |
+| Servo Signal    | GPIO 15           |
+| 5V and GND      | As required       |
+
+*Adjust pins as needed to fit your hardware.*
+
+## Software Setup
+
+1. Install the following Arduino libraries:
+   - Keypad
+   - Adafruit SSD1306
+   - Adafruit GFX
+   - ESP32Servo
+   - WiFi
+   - WebServer
+   - EEPROM (built-in for ESP32)
+
+2. Replace the WiFi credentials (`ssid` and `password`) in the code with your own.
+
+3. Upload the code to your ESP32 board.
+
+## Usage
+
+- On startup, the OLED displays: **Enter PIN:**
+- Use the keypad to enter the 4-digit PIN.
+- If correct, the servo unlocks for 3 seconds and then locks again.
+- If incorrect, **Wrong PIN** is displayed for 3 seconds.
+- Press `*` to clear the current input.
+- Press `D` to manually reset/lock the servo.
+- Connect to the ESP32’s IP address shown in Serial Monitor.
+- Access `http://<ESP32_IP>/` in a browser to view or change the PIN remotely.
 
 ## 📊 Security Reports
 
