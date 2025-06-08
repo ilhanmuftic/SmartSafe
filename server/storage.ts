@@ -344,8 +344,11 @@ export class MemStorage implements IStorage {
     const log: VehicleAccess = {
       id: this.currentId.accessLogs++,
       requestId: insertLog.requestId,
+      employeeId: insertLog.employeeId,
+      vehicleId: insertLog.vehicleId,
       accessTime: insertLog.accessTime || new Date(),
       accessCode: insertLog.accessCode,
+      action: insertLog.action || "SAFE_OPENED",
       successful: insertLog.successful || true,
       location: insertLog.location || null,
       createdAt: new Date(),

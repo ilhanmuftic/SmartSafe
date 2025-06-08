@@ -46,8 +46,11 @@ export const vehicleRequests = pgTable("vehicle_requests", {
 export const vehicleAccess = pgTable("vehicle_access", {
   id: serial("id").primaryKey(),
   requestId: integer("request_id").references(() => vehicleRequests.id).notNull(),
+  employeeId: integer("employee_id").references(() => users.id).notNull(),
+  vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
   accessTime: timestamp("access_time").defaultNow().notNull(),
   accessCode: text("access_code").notNull(),
+  action: text("action").notNull().default("SAFE_OPENED"),
   successful: boolean("successful").notNull().default(true),
   location: text("location"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

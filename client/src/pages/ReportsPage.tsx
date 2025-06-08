@@ -2,10 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Area, AreaChart } from "recharts";
-import { Car, TrendingUp, Users, Calendar, Download, Clock } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { Shield, TrendingUp, Users, Calendar, Download, Clock, Key, AlertTriangle } from "lucide-react";
 import Layout from "@/components/Layout";
-import type { VehicleRequestWithDetails, Vehicle } from "@shared/schema";
+import type { VehicleRequestWithDetails, Vehicle, VehicleAccess } from "@shared/schema";
 import { useState } from "react";
 
 export default function ReportsPage() {
@@ -19,99 +19,107 @@ export default function ReportsPage() {
     queryKey: ["/api/vehicles"],
   });
 
-  // Calculate metrics
-  const totalRequests = (requests as VehicleRequestWithDetails[]).length;
-  const approvedRequests = (requests as VehicleRequestWithDetails[]).filter(r => r.status === "approved").length;
-  const rejectedRequests = (requests as VehicleRequestWithDetails[]).filter(r => r.status === "rejected").length;
-  const pendingRequests = (requests as VehicleRequestWithDetails[]).filter(r => r.status === "pending").length;
-  
-  const approvalRate = totalRequests > 0 ? Math.round((approvedRequests / totalRequests) * 100) : 0;
+  const { data: accessLogs = [] } = useQuery({
+    queryKey: ["/api/access-logs"],
+  });
 
-  // Vehicle utilization data
-  const vehicleUtilization = (vehicles as Vehicle[]).map(vehicle => {
-    const vehicleRequests = (requests as VehicleRequestWithDetails[]).filter(r => 
-      r.vehicleId === vehicle.id && r.status === "approved"
-    );
+  // Security Access Metrics
+  const totalAccesses = (accessLogs as VehicleAccess[]).length;
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  
+  const monthlyAccesses = (accessLogs as VehicleAccess[]).filter(log => {
+    const logDate = new Date(log.accessTime);
+    return logDate.getMonth() === currentMonth && logDate.getFullYear() === currentYear;
+  }).length;
+
+  // Get unique employees from approved requests
+  const approvedRequests = (requests as VehicleRequestWithDetails[]).filter(r => r.status === "approved");
+  const uniqueEmployees = new Set(approvedRequests.map(req => req.employeeId)).size;
+
+  // Daily access patterns for security monitoring
+  const dailyAccessData = Array.from({ length: 30 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (29 - i));
+    const dayName = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    
+    const dayAccesses = (accessLogs as VehicleAccess[]).filter(log => {
+      const logDate = new Date(log.accessTime);
+      return logDate.toDateString() === date.toDateString();
+    }).length;
+
+    return {
+      date: dayName,
+      accesses: dayAccesses
+    };
+  });
+
+  // Employee access frequency based on approved requests
+  const employeeAccessData = approvedRequests.reduce((acc, request) => {
+    const employeeName = request.employee.name;
+    if (!acc[employeeName]) {
+      acc[employeeName] = { name: employeeName, accesses: 0, id: request.employee.id };
+    }
+    acc[employeeName].accesses++;
+    return acc;
+  }, {} as Record<string, any>);
+
+  const employeeData = Object.values(employeeAccessData).slice(0, 5);
+
+  // Vehicle usage for physical access
+  const vehicleAccessData = (vehicles as Vehicle[]).map(vehicle => {
+    const vehicleRequests = approvedRequests.filter(req => req.vehicleId === vehicle.id);
     return {
       name: vehicle.model,
-      usage: vehicleRequests.length,
+      accesses: vehicleRequests.length,
       plate: vehicle.plateNumber
     };
   });
 
-  // Monthly trends
-  const monthlyData = Array.from({ length: 12 }, (_, i) => {
-    const month = new Date();
-    month.setMonth(month.getMonth() - (11 - i));
-    const monthName = month.toLocaleDateString('en-US', { month: 'short' });
+  // Time-based access patterns for security
+  const hourlyAccesses = Array.from({ length: 24 }, (_, hour) => {
+    const accessCount = (accessLogs as VehicleAccess[]).filter(log => {
+      const logHour = new Date(log.accessTime).getHours();
+      return logHour === hour;
+    }).length;
     
-    const monthRequests = (requests as VehicleRequestWithDetails[]).filter(r => {
-      const requestDate = new Date(r.createdAt);
-      return requestDate.getMonth() === month.getMonth() && 
-             requestDate.getFullYear() === month.getFullYear();
-    });
-
     return {
-      month: monthName,
-      total: monthRequests.length,
-      approved: monthRequests.filter(r => r.status === "approved").length,
-      rejected: monthRequests.filter(r => r.status === "rejected").length,
-      pending: monthRequests.filter(r => r.status === "pending").length
+      hour: hour.toString().padStart(2, '0') + ':00',
+      accesses: accessCount
     };
   });
 
-  // Status distribution
-  const statusData = [
-    { name: "Approved", value: approvedRequests, color: "#10B981" },
-    { name: "Rejected", value: rejectedRequests, color: "#EF4444" },
-    { name: "Pending", value: pendingRequests, color: "#F59E0B" }
-  ];
+  // Export security logs
+  const exportSecurityLogs = () => {
+    const csvData = (accessLogs as VehicleAccess[]).map(log => ({
+      'Access Time': new Date(log.accessTime).toLocaleString(),
+      'Access Code (PIN)': log.accessCode,
+      'Request ID': log.requestId,
+      'Action': 'SAFE_OPENED',
+      'Location': log.location || 'Vehicle Safe'
+    }));
 
-  // Peak usage times
-  const hourlyData = Array.from({ length: 24 }, (_, hour) => {
-    const hourRequests = (requests as VehicleRequestWithDetails[]).filter(r => {
-      return new Date(r.startDate).getHours() === hour;
-    });
-    
-    return {
-      hour: `${hour}:00`,
-      requests: hourRequests.length
-    };
-  });
+    const csvContent = [
+      Object.keys(csvData[0] || {}).join(','),
+      ...csvData.map(row => Object.values(row).join(','))
+    ].join('\n');
 
-  const exportReport = () => {
-    const reportData = {
-      generatedAt: new Date().toISOString(),
-      summary: {
-        totalRequests,
-        approvedRequests,
-        rejectedRequests,
-        pendingRequests,
-        approvalRate
-      },
-      vehicleUtilization,
-      monthlyTrends: monthlyData,
-      statusDistribution: statusData
-    };
-
-    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+    const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `vehicle-reports-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
+    a.download = `security-access-logs-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
-    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   };
 
   return (
     <Layout 
-      title="Analytics & Reports"
+      title="Security & Access Reports" 
       actions={
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -121,248 +129,189 @@ export default function ReportsPage() {
               <SelectItem value="year">Last Year</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={exportReport} variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export Report
+          <Button onClick={exportSecurityLogs} className="bg-blue-600 hover:bg-blue-700">
+            <Download className="w-4 h-4 mr-2" />
+            Export Logs
           </Button>
         </div>
       }
     >
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Calendar className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Requests</p>
-                <p className="text-2xl font-bold text-gray-900">{totalRequests}</p>
-                <p className="text-xs text-gray-500">All time</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="space-y-6">
+        {/* Security Overview Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Safe Opens</CardTitle>
+              <Shield className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalAccesses}</div>
+              <p className="text-xs text-muted-foreground">Physical access events</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Approval Rate</p>
-                <p className="text-2xl font-bold text-gray-900">{approvalRate}%</p>
-                <p className="text-xs text-green-600">+5% from last month</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">This Month</CardTitle>
+              <Calendar className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{monthlyAccesses}</div>
+              <p className="text-xs text-muted-foreground">Safe opens this month</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Car className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Vehicles</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {(vehicles as Vehicle[]).filter(v => v.status === "available").length}
-                </p>
-                <p className="text-xs text-gray-500">of {(vehicles as Vehicle[]).length} total</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Employees</CardTitle>
+              <Users className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{uniqueEmployees}</div>
+              <p className="text-xs text-muted-foreground">Employees with access</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Clock className="h-6 w-6 text-orange-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Avg Response Time</p>
-                <p className="text-2xl font-bold text-gray-900">2.4h</p>
-                <p className="text-xs text-orange-600">-12% from last month</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">PIN Security</CardTitle>
+              <Key className="h-4 w-4 text-amber-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">One-Time</div>
+              <p className="text-xs text-muted-foreground">Single use codes only</p>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Monthly Trends */}
+        {/* Daily Access Pattern */}
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Request Trends</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Daily Safe Access Pattern (Last 30 Days)
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={monthlyData}>
+              <LineChart data={dailyAccessData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
+                <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Area type="monotone" dataKey="approved" stackId="1" stroke="#10B981" fill="#10B981" />
-                <Area type="monotone" dataKey="rejected" stackId="1" stroke="#EF4444" fill="#EF4444" />
-                <Area type="monotone" dataKey="pending" stackId="1" stroke="#F59E0B" fill="#F59E0B" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Status Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Request Status Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={statusData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {statusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Vehicle Utilization */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Vehicle Utilization</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={vehicleUtilization} layout="horizontal">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={100} />
-                <Tooltip 
-                  formatter={(value, name, props) => [
-                    `${value} requests`,
-                    `License: ${props.payload.plate}`
-                  ]}
+                <Line 
+                  type="monotone" 
+                  dataKey="accesses" 
+                  stroke="#10B981" 
+                  strokeWidth={2}
+                  dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
                 />
-                <Bar dataKey="usage" fill="#3B82F6" />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Hourly Access Patterns */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Access Times (24-Hour Pattern)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={hourlyAccesses}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="hour" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="accesses" fill="#3B82F6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Employee Access Frequency */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Top Employee Usage
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={employeeData} layout="horizontal">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" width={80} />
+                  <Tooltip />
+                  <Bar dataKey="accesses" fill="#10B981" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Vehicle Access Usage */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Vehicle Safe Access Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={vehicleAccessData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="accesses" fill="#8B5CF6" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Peak Usage Times */}
+        {/* Recent Access Logs */}
         <Card>
           <CardHeader>
-            <CardTitle>Peak Usage Hours</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Recent Safe Opens (Security Log)
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={hourlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="hour" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="requests" stroke="#8B5CF6" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Detailed Statistics */}
-      <div className="mt-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Detailed Statistics</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-3">Request Status</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Approved</span>
-                    <span className="font-medium text-green-600">{approvedRequests}</span>
+            <div className="space-y-4">
+              {(accessLogs as VehicleAccess[]).slice(0, 10).map((log, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Key className="h-4 w-4 text-green-600" />
+                    <div>
+                      <div className="font-medium">SAFE OPENED</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        PIN: {log.accessCode} • Request ID: {log.requestId}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Rejected</span>
-                    <span className="font-medium text-red-600">{rejectedRequests}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Pending</span>
-                    <span className="font-medium text-yellow-600">{pendingRequests}</span>
+                  <div className="text-right">
+                    <div className="text-sm font-medium">
+                      {new Date(log.accessTime).toLocaleDateString()}
+                    </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      {new Date(log.accessTime).toLocaleTimeString()}
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-3">Fleet Status</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Available</span>
-                    <span className="font-medium text-green-600">
-                      {(vehicles as Vehicle[]).filter(v => v.status === "available").length}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">In Use</span>
-                    <span className="font-medium text-blue-600">
-                      {(vehicles as Vehicle[]).filter(v => v.status === "in_use").length}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Maintenance</span>
-                    <span className="font-medium text-red-600">
-                      {(vehicles as Vehicle[]).filter(v => v.status === "maintenance").length}
-                    </span>
-                  </div>
+              ))}
+              {(accessLogs as VehicleAccess[]).length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No access logs available yet. Safe opens will appear here when the ESP device records activity.
                 </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-3">Performance</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Approval Rate</span>
-                    <span className="font-medium text-gray-900">{approvalRate}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Avg Daily Requests</span>
-                    <span className="font-medium text-gray-900">
-                      {Math.round(totalRequests / 30)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Most Popular Vehicle</span>
-                    <span className="font-medium text-gray-900">
-                      {vehicleUtilization.length > 0 
-                        ? vehicleUtilization.reduce((prev, current) => 
-                            prev.usage > current.usage ? prev : current
-                          ).name.split(' ')[0]
-                        : "N/A"
-                      }
-                    </span>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
